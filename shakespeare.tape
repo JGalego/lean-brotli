@@ -7,6 +7,8 @@ Set FontSize 20
 Set Width 600
 Set Height 600
 
-Type "lake exe shakespeare"
+Hide
+Type "clear && lake exe shakespeare"
 Enter
+Show
 Wait+Line@60s
