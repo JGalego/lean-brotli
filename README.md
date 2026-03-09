@@ -1,0 +1,84 @@
+# lean-brotli
+
+Lean 4 bindings for [Brotli](https://github.com/google/brotli) compression (RFC 7932).
+
+Provides whole-buffer and streaming APIs for Brotli compression and decompression,
+plus file-level helpers.
+
+## Requirements
+
+- Lean 4 (tested with v4.29.0-rc4)
+- Brotli development headers (`libbrotli-dev` or equivalent)
+- `pkg-config` (for header discovery on NixOS and similar)
+
+On NixOS (or any system where Brotli is not in the default library path),
+the project includes a `shell.nix` that provides all C dependencies:
+
+```bash
+nix-shell    # then run lake build, lake exe test, etc. inside the shell
+```
+
+Or set `BROTLI_CFLAGS` manually to point at the headers if you prefer.
+
+## Usage
+
+### Compression
+
+```lean
+import Brotli
+
+-- Whole-buffer compress (quality 0–11, default 11)
+let compressed ← Brotli.compress data
+let compressed ← Brotli.compress data (quality := 5)
+
+-- Whole-buffer decompress
+let original ← Brotli.decompress compressed
+let original ← Brotli.decompress compressed (maxDecompressedSize := 1_000_000)
+```
+
+### Streaming
+
+For data too large to fit in memory:
+
+```lean
+import Brotli
+
+-- Stream between IO.FS.Streams (64 KB chunks, bounded memory)
+Brotli.compressStream inputStream outputStream (quality := 11)
+Brotli.decompressStream inputStream outputStream
+
+-- File helpers
+let brPath ← Brotli.compressFile "/path/to/file"         -- writes /path/to/file.br
+let outPath ← Brotli.decompressFile "/path/to/file.br"   -- writes /path/to/file
+```
+
+### Low-level streaming state
+
+```lean
+let enc ← Brotli.CompressState.new (quality := 6)
+let out1 ← enc.push chunk1
+let out2 ← enc.push chunk2
+let final ← enc.finish    -- must call exactly once
+
+let dec ← Brotli.DecompressState.new
+let plain ← dec.push compressedChunk
+let rest  ← dec.finish
+```
+
+## Building
+
+```bash
+lake build
+lake exe test
+lake exe bench compress 1048576 prng 11
+```
+
+## Notes
+
+- Quality 0 is fastest; quality 11 is maximum
+  compression (slow).  The default is 11.
+- Brotli does **not** embed the decompressed size in the stream; the whole-buffer
+  decompressor therefore uses a streaming decoder internally with a growable buffer.
+- The three shared library components (`libbrotlienc`, `libbrotlidec`,
+  `libbrotlicommon`) are linked statically on Linux to avoid glibc symbol
+  mismatches with Lean's bundled toolchain sysroot.
