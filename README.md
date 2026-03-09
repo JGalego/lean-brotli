@@ -11,12 +11,12 @@ plus file-level helpers.
 > Or to take arms against a sea of plaintext <br>
 > And by deflating end them."
 
-<img src="shakespeare.gif"/>
+<img src="shakespeare.gif" width="40%"/>
 
 ## Requirements
 
-- Lean 4 (tested with v4.29.0-rc4)
-- Brotli development headers (`libbrotli-dev` or equivalent)
+- [Lean 4](https://lean-lang.org/) (tested with `v4.29.0-rc4`)
+- [Brotli](https://github.com/google/brotli) development headers (`libbrotli-dev` or equivalent)
 - `pkg-config` (for header discovery on NixOS and similar)
 
 On NixOS (or any system where Brotli is not in the default library path),
@@ -83,10 +83,6 @@ lake exe bench compress 1048576 prng 11
 
 ## Notes
 
-- Quality 0 is fastest; quality 11 is maximum
-  compression (slow).  The default is 11.
-- Brotli does **not** embed the decompressed size in the stream; the whole-buffer
-  decompressor therefore uses a streaming decoder internally with a growable buffer.
-- The three shared library components (`libbrotlienc`, `libbrotlidec`,
-  `libbrotlicommon`) are linked statically on Linux to avoid glibc symbol
-  mismatches with Lean's bundled toolchain sysroot.
+- Quality 0 is fastest; quality 11 is maximum compression (slow).  The default is 11.
+- Brotli does **not** embed the decompressed size in the stream; the whole-buffer decompressor therefore uses a streaming decoder internally with a growable buffer.
+- The three shared library components (`libbrotlienc`, `libbrotlidec`, `libbrotlicommon`) are linked statically on Linux to avoid glibc symbol mismatches with Lean's bundled toolchain sysroot.
