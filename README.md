@@ -1,9 +1,17 @@
-# lean-brotli
+# lean-brotli 🥦
 
 Lean 4 bindings for [Brotli](https://github.com/google/brotli) compression (RFC 7932).
 
 Provides whole-buffer and streaming APIs for Brotli compression and decompression,
 plus file-level helpers.
+
+> "**To Brotli, or not to Brotli**, that is the compression. <br>
+> Whether ’tis nobler in the RAM to suffer <br>
+> The slings and arrows of outrageous file sizes, <br>
+> Or to take arms against a sea of plaintext <br>
+> And by deflating end them."
+
+<img src="shakespeare.gif"/>
 
 ## Requirements
 

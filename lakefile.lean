@@ -100,3 +100,7 @@ lean_exe test where
 -- Benchmark -------------------------------------------------------------------
 lean_exe bench where
   root := `BrotliBench
+
+-- Example ---------------------------------------------------------------------
+lean_exe shakespeare where
+  root := `BrotliShakespeare
