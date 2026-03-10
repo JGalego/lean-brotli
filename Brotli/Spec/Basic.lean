@@ -33,81 +33,64 @@ instance (q : UInt8) : Decidable (ValidQuality q) :=
 /-- `ValidQuality` unfolds to a `Nat` comparison, useful for `omega`. -/
 theorem validQuality_iff (q : UInt8) : ValidQuality q ↔ q.toNat ≤ 11 := Iff.rfl
 
-@[simp] theorem validQuality_zero  : ValidQuality 0  := by decide
-@[simp] theorem validQuality_one   : ValidQuality 1  := by decide
-@[simp] theorem validQuality_two   : ValidQuality 2  := by decide
-@[simp] theorem validQuality_three : ValidQuality 3  := by decide
-@[simp] theorem validQuality_four  : ValidQuality 4  := by decide
-@[simp] theorem validQuality_five  : ValidQuality 5  := by decide
-@[simp] theorem validQuality_six   : ValidQuality 6  := by decide
-@[simp] theorem validQuality_seven : ValidQuality 7  := by decide
-@[simp] theorem validQuality_eight : ValidQuality 8  := by decide
-@[simp] theorem validQuality_nine  : ValidQuality 9  := by decide
-@[simp] theorem validQuality_ten   : ValidQuality 10 := by decide
-@[simp] theorem validQuality_eleven: ValidQuality 11 := by decide
+/-- Every concrete quality literal in [0, 11] is valid.  Covers all twelve
+    levels in a single `@[simp]` lemma instead of twelve separate declarations. -/
+@[simp] theorem validQuality_le {q : UInt8} (h : q.toNat ≤ 11 := by omega) :
+    ValidQuality q := h
 
-theorem not_validQuality_twelve : ¬ ValidQuality 12 := by decide
 theorem not_validQuality_of_gt {q : UInt8} (h : 11 < q.toNat) : ¬ ValidQuality q :=
   fun hq => absurd (validQuality_iff q |>.mp hq) (by omega)
 
 /-! ## Core axioms -/
 
-/-- **Roundtrip axiom** (RFC 7932 §5): Compressing `data` at any valid quality
-    and decompressing the result recovers exactly `data`.
+/-- **Roundtrip axiom** (RFC 7932 §5): IF compressing `data` at a valid quality
+    succeeds with result `c`, THEN decompressing `c` succeeds and returns `data`.
 
-    Formally: the composite `IO` action `compress data q >>= decompress`
-    is propositionally equal to `pure data`, i.e. it *always* returns `data`
-    without performing any visible side effects beyond the internal allocation. -/
-axiom roundtrip (data : ByteArray) (q : UInt8) (hq : ValidQuality q) :
-    (Brotli.compress data q >>= Brotli.decompress) = pure data
+    This conditional formulation is safer than equating `IO` actions directly:
+    it does not assume `compress` can never throw, keeping the axiom consistent
+    even if the C encoder encounters an OOM or allocator error.  Combine with
+    `SizeBound.compress_ok` when you need the unconditional form. -/
+axiom roundtrip (data : ByteArray) (q : UInt8) (hq : ValidQuality q)
+    (c : ByteArray) (hc : Brotli.compress data q = pure c) :
+    Brotli.decompress c = pure data
 
 /-! ## Derived theorems -/
 
-/-- Roundtrip at the **default quality** (11).
-    Uses the implicit default argument of `Brotli.compress`. -/
-theorem roundtrip_default (data : ByteArray) :
-    (Brotli.compress data >>= Brotli.decompress) = pure data :=
-  roundtrip data 11 (by decide)
+/-- Roundtrip at the **default quality** (11). -/
+theorem roundtrip_default (data : ByteArray)
+    (c : ByteArray) (hc : Brotli.compress data = pure c) :
+    Brotli.decompress c = pure data :=
+  roundtrip data 11 (by simp) c hc
 
 /-- **Empty-input roundtrip**: compressing then decompressing an empty
     `ByteArray` always yields an empty `ByteArray`. -/
-theorem roundtrip_empty (q : UInt8) (hq : ValidQuality q) :
-    (Brotli.compress ByteArray.empty q >>= Brotli.decompress) =
-    pure ByteArray.empty :=
-  roundtrip ByteArray.empty q hq
-
-/-- Empty-input roundtrip at the default quality. -/
-theorem roundtrip_empty_default :
-    (Brotli.compress ByteArray.empty >>= Brotli.decompress) =
-    pure ByteArray.empty :=
-  roundtrip_default ByteArray.empty
+theorem roundtrip_empty (q : UInt8) (hq : ValidQuality q)
+    (c : ByteArray) (hc : Brotli.compress ByteArray.empty q = pure c) :
+    Brotli.decompress c = pure ByteArray.empty :=
+  roundtrip ByteArray.empty q hq c hc
 
 /-- **Quality invariance**: for any two valid quality levels `q₁` and `q₂`,
-    decompressing the output of compression at either level returns the same data.
+    IF compression succeeds with both, decompressing either result returns `data`.
 
-    This is the formal statement that Brotli quality only affects *compressed size*
-    and *throughput*, never the decompressed content. -/
+    Brotli quality only affects *compressed size* and *throughput*, never the
+    decompressed content. -/
 theorem quality_invariant (data : ByteArray) (q₁ q₂ : UInt8)
-    (hq₁ : ValidQuality q₁) (hq₂ : ValidQuality q₂) :
-    (Brotli.compress data q₁ >>= Brotli.decompress) =
-    (Brotli.compress data q₂ >>= Brotli.decompress) := by
-  rw [roundtrip data q₁ hq₁, roundtrip data q₂ hq₂]
+    (hq₁ : ValidQuality q₁) (hq₂ : ValidQuality q₂)
+    (c₁ : ByteArray) (hc₁ : Brotli.compress data q₁ = pure c₁)
+    (c₂ : ByteArray) (hc₂ : Brotli.compress data q₂ = pure c₂) :
+    Brotli.decompress c₁ = Brotli.decompress c₂ := by
+  rw [roundtrip data q₁ hq₁ c₁ hc₁, roundtrip data q₂ hq₂ c₂ hc₂]
 
-/-- Any valid quality roundtrip has the same result as the default quality. -/
-theorem quality_eq_default (data : ByteArray) (q : UInt8) (hq : ValidQuality q) :
-    (Brotli.compress data q >>= Brotli.decompress) =
-    (Brotli.compress data >>= Brotli.decompress) :=
-  quality_invariant data q 11 hq (by decide)
-
-/-- **Universal roundtrip**: the roundtrip property holds for every valid quality. -/
+/-- **Universal roundtrip**: the roundtrip property holds for every valid quality,
+    given a successful compression. -/
 theorem all_qualities_roundtrip (data : ByteArray) :
     ∀ q : UInt8, ValidQuality q →
-      (Brotli.compress data q >>= Brotli.decompress) = pure data :=
-  fun q hq => roundtrip data q hq
+      ∀ c : ByteArray, Brotli.compress data q = pure c →
+        Brotli.decompress c = pure data :=
+  fun q hq c hc => roundtrip data q hq c hc
 
-/-- All twelve quality levels (0 through 11) are valid. -/
-theorem twelve_valid_qualities :
-    ∀ n ∈ List.range 12, ValidQuality n.toUInt8 := by
-  decide
+/-- All twelve Brotli quality levels (0 through 11) are valid. -/
+theorem all_qualities_valid : ∀ q : Fin 12, ValidQuality q.val.toUInt8 :=
+  fun q => by simp [ValidQuality]; omega
 
 end Brotli.Spec

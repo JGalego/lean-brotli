@@ -50,13 +50,19 @@ def streamDecompress (data : ByteArray) : IO ByteArray := do
 
     This axiom captures the RFC 7932 guarantee that the streaming encoder is
     *transparent*: it produces the same bit-for-bit output as the block encoder
-    when all input is provided in one push. -/
+    when all input is provided in one push.
+
+    Note: quantified over all `q`, not just `ValidQuality q`.  For invalid `q`
+    both sides raise the same error, so the equality holds vacuously. -/
 axiom compress_singleChunk (data : ByteArray) (q : UInt8) :
     streamCompress data q = Brotli.compress data q
 
 /-- **Single-chunk decompression axiom**: Using the streaming decompressor with a
     single push of all compressed data produces the same `ByteArray` as
-    whole-buffer `Brotli.decompress`. -/
+    whole-buffer `Brotli.decompress`.
+
+    Note: unconditional — holds for any input, valid or not.  Both sides either
+    return the same bytes or raise the same error. -/
 axiom decompress_singleChunk (data : ByteArray) :
     streamDecompress data = Brotli.decompress data
 
@@ -67,45 +73,38 @@ theorem compress_singleChunk_default (data : ByteArray) :
     streamCompress data = Brotli.compress data :=
   compress_singleChunk data 11
 
-/-- The streaming compress output is the same as the batch compress output:
-    useful in `calc`-style rewrites. -/
-theorem streamCompress_eq (data : ByteArray) (q : UInt8) :
-    streamCompress data q = Brotli.compress data q :=
-  compress_singleChunk data q
-
-/-- The streaming decompress output is the same as the batch decompress output. -/
-theorem streamDecompress_eq (data : ByteArray) :
-    streamDecompress data = Brotli.decompress data :=
-  decompress_singleChunk data
-
 /-- **Streaming roundtrip**: compressing then decompressing via the single-chunk
-    streaming API recovers the original data for any valid quality.
+    streaming API recovers the original data for any valid quality, given
+    successful compression.
 
-    Proof: rewrite both streaming operations to their batch equivalents using
-    the single-chunk axioms, then apply the core `roundtrip` axiom. -/
+    Proof: rewrite the streaming operations to their batch equivalents, then
+    apply the core conditional `roundtrip` axiom from `Brotli.Spec.Basic`. -/
 theorem streaming_roundtrip (data : ByteArray) (q : UInt8)
-    (hq : Brotli.Spec.ValidQuality q) :
-    (streamCompress data q >>= streamDecompress) = pure data := by
-  -- streamDecompress = Brotli.decompress as functions (by decompress_singleChunk)
-  have hd : streamDecompress = Brotli.decompress :=
-    funext decompress_singleChunk
-  -- streamCompress data q = Brotli.compress data q (by compress_singleChunk)
-  rw [compress_singleChunk data q, hd]
-  -- Brotli.compress data q >>= Brotli.decompress = pure data (by roundtrip)
-  exact Brotli.Spec.roundtrip data q hq
+    (hq : Brotli.Spec.ValidQuality q)
+    (c : ByteArray) (hc : streamCompress data q = pure c) :
+    streamDecompress c = pure data := by
+  -- Rewrite streaming compress to batch compress
+  rw [compress_singleChunk] at hc
+  -- Rewrite streaming decompress to batch decompress
+  rw [decompress_singleChunk]
+  -- Apply the core conditional roundtrip axiom
+  exact Brotli.Spec.roundtrip data q hq c hc
 
 /-- Streaming roundtrip at the default quality (11). -/
-theorem streaming_roundtrip_default (data : ByteArray) :
-    (streamCompress data >>= streamDecompress) = pure data :=
-  streaming_roundtrip data 11 (by decide)
+theorem streaming_roundtrip_default (data : ByteArray)
+    (c : ByteArray) (hc : streamCompress data = pure c) :
+    streamDecompress c = pure data :=
+  streaming_roundtrip data 11 (by simp) c hc
 
 /-- **Quality invariance for streaming**: regardless of what valid quality is used
-    for streaming compression, decompressing the output always yields `data`. -/
+    for streaming compression, decompressing either result returns `data`. -/
 theorem streaming_quality_invariant (data : ByteArray) (q₁ q₂ : UInt8)
-    (hq₁ : Brotli.Spec.ValidQuality q₁) (hq₂ : Brotli.Spec.ValidQuality q₂) :
-    (streamCompress data q₁ >>= streamDecompress) =
-    (streamCompress data q₂ >>= streamDecompress) := by
-  rw [streaming_roundtrip data q₁ hq₁, streaming_roundtrip data q₂ hq₂]
+    (hq₁ : Brotli.Spec.ValidQuality q₁) (hq₂ : Brotli.Spec.ValidQuality q₂)
+    (c₁ : ByteArray) (hc₁ : streamCompress data q₁ = pure c₁)
+    (c₂ : ByteArray) (hc₂ : streamCompress data q₂ = pure c₂) :
+    streamDecompress c₁ = streamDecompress c₂ := by
+  rw [streaming_roundtrip data q₁ hq₁ c₁ hc₁,
+      streaming_roundtrip data q₂ hq₂ c₂ hc₂]
 
 /-- Streaming and batch compression produce the same bytes (as IO actions). -/
 theorem streaming_eq_batch_compress (data : ByteArray) (q : UInt8) :
@@ -116,13 +115,5 @@ theorem streaming_eq_batch_compress (data : ByteArray) (q : UInt8) :
 theorem streaming_eq_batch_decompress (data : ByteArray) :
     streamDecompress data = Brotli.decompress data :=
   decompress_singleChunk data
-
-/-- Streaming compress → streaming decompress is equivalent to
-    batch compress → batch decompress. -/
-theorem streaming_eq_batch_roundtrip (data : ByteArray) (q : UInt8) :
-    (streamCompress data q >>= streamDecompress) =
-    (Brotli.compress data q >>= Brotli.decompress) := by
-  have hd : streamDecompress = Brotli.decompress := funext decompress_singleChunk
-  rw [compress_singleChunk, hd]
 
 end Brotli.Spec.Streaming

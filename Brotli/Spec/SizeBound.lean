@@ -53,7 +53,10 @@ theorem maxCompressedSize_small {n : Nat} (hn : 0 < n) (hsmall : n < 16777216) :
     maxCompressedSize n = n + 6 := by
   have hd : n / 16777216 = 0 := Nat.div_eq_zero_iff.mpr (Or.inr hsmall)
   unfold maxCompressedSize
-  split <;> omega
+  -- n = 0 is absurd (contradicts hn); non-zero case uses hd
+  split
+  · omega
+  · omega
 
 /-! ## Success axiom -/
 
@@ -84,11 +87,13 @@ theorem compress_size_le_default (data : ByteArray) (c : ByteArray)
     c.size ≤ maxCompressedSize data.size :=
   compress_size_le data 11 (by decide) c hc
 
-/-- Compressing empty data produces at most 2 bytes. -/
+/-- Compressing empty data produces at most 2 bytes.
+    (`maxCompressedSize 0 = 2`, so this is a direct corollary of `compress_size_le`.) -/
 theorem compress_empty_size_le (q : UInt8) (hq : ValidQuality q)
     (c : ByteArray) (hc : Brotli.compress ByteArray.empty q = pure c) :
     c.size ≤ 2 :=
-  compress_size_le ByteArray.empty q hq c hc
+  show c.size ≤ maxCompressedSize ByteArray.empty.size from
+    compress_size_le ByteArray.empty q hq c hc
 
 /-- Given `compress_ok`, we can always extract a concrete result. -/
 theorem compress_result (data : ByteArray) (q : UInt8) (hq : ValidQuality q) :
