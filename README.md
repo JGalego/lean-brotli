@@ -86,3 +86,20 @@ lake exe bench compress 1048576 prng 11
 - Quality 0 is fastest; quality 11 is maximum compression (slow).  The default is 11.
 - Brotli does **not** embed the decompressed size in the stream; the whole-buffer decompressor therefore uses a streaming decoder internally with a growable buffer.
 - The three shared library components (`libbrotlienc`, `libbrotlidec`, `libbrotlicommon`) are linked statically on Linux to avoid glibc symbol mismatches with Lean's bundled toolchain sysroot.
+
+## References
+
+### Articles
+
+* (Leo de Moura) [When AI Writes the World's Software, Who Verifies It?](https://leodemoura.github.io/blog/2026/02/28/when-ai-writes-the-worlds-software.html)
+* (AWS Open Source Blog) [Lean Into Verified Software Development](https://aws.amazon.com/blogs/opensource/lean-into-verified-software-development/)
+
+## Standards
+
+* (RFC 7932) [Brotli Compressed Data Format](https://datatracker.ietf.org/doc/html/rfc7932)
+
+### Other Projects
+
+* [`kim-em/lean-zip`](https://github.com/kim-em/lean-zip): Lean 4 bindings for zlib and Zstandard compression
+* [`google/brotli`](https://github.com/google/brotli): Brotli compression format
+* [`madler/brotli`](https://github.com/madler/brotli): Review and verification of Brotli compressed data format specification
