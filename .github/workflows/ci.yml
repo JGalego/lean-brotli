@@ -1,0 +1,29 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout 📦
+        uses: actions/checkout@v6
+      - name: Build 🏗️
+        uses: leanprover/lean-action@v1.4.0
+        with:
+          auto-config: false
+          build: true
+      - name: Test 🧪
+        uses: leanprover/lean-action@v1.4.0
+        with:
+          auto-config: false
+          test: true
+      - name: Lint 🧹
+        uses: leanprover/lean-action@v1.4.0
+        with:
+          auto-config: false
+          lint: true
