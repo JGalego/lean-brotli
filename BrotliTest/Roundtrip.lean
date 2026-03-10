@@ -17,6 +17,11 @@ def BrotliTest.Roundtrip.tests : IO Unit := do
     let d ← Brotli.decompress c
     unless d == data do throw (IO.userError s!"brotli quality {q} roundtrip failed")
 
+  -- Invalid quality should be rejected
+  assertThrows "brotli invalid quality"
+    (do let _ ← Brotli.compress data 12)
+    "quality"
+
   -- Empty input
   let emptyComp ← Brotli.compress ByteArray.empty
   let emptyDecomp ← Brotli.decompress emptyComp

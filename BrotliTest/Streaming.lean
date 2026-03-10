@@ -7,6 +7,11 @@ def BrotliTest.Streaming.tests : IO Unit := do
   let data ← mkTestData
   let chunkSize := 1000
 
+  -- Invalid quality should be rejected for streaming state
+  assertThrows "brotli streaming invalid quality"
+    (do let _ ← Brotli.CompressState.new 12)
+    "quality"
+
   -- Streaming compress → streaming decompress (small chunks)
   let enc ← Brotli.CompressState.new
   let mut compBuf := ByteArray.empty
@@ -30,6 +35,21 @@ def BrotliTest.Streaming.tests : IO Unit := do
   let decFinal ← dec.finish
   decBuf := decBuf ++ decFinal
   unless decBuf == data do throw (IO.userError "streaming compress→decompress roundtrip failed")
+
+  -- Trailing garbage after a valid Brotli stream should be rejected
+  let trailing := compBuf ++ (ByteArray.mk #[0xAA, 0xBB, 0xCC])
+  let decTrailing ← Brotli.DecompressState.new
+  assertThrows "brotli trailing compressed bytes"
+    (do let _ ← decTrailing.push trailing)
+    "trailing data"
+
+  -- Additional push after end-of-stream should be rejected
+  let decDone ← Brotli.DecompressState.new
+  let _ ← decDone.push compBuf
+  let _ ← decDone.finish
+  assertThrows "brotli push after stream end"
+    (do let _ ← decDone.push (ByteArray.mk #[0x00]))
+    "end of stream"
 
   -- compressStream / decompressStream helpers
   let inStream  ← byteArrayReadStream data

@@ -26,6 +26,10 @@ static lean_obj_res mk_dec_error(const char *prefix, BrotliDecoderErrorCode ec) 
     return mk_io_error(buf);
 }
 
+static int brotli_quality_is_valid(uint8_t quality) {
+    return quality <= 11;
+}
+
 /*
  * Grow a buffer, with overflow check.
  * Returns NULL on overflow or allocation failure. Frees old buffer on failure.
@@ -46,6 +50,10 @@ static uint8_t *grow_buffer(uint8_t *buf, size_t *buf_size) {
 
 LEAN_EXPORT lean_obj_res lean_brotli_compress(b_lean_obj_arg data, uint8_t quality,
                                                lean_obj_arg _w) {
+    if (!brotli_quality_is_valid(quality)) {
+        return mk_io_error("brotli compress: quality must be in range 0..11");
+    }
+
     const uint8_t *src = lean_sarray_cptr(data);
     size_t src_len = lean_sarray_size(data);
 
@@ -202,6 +210,10 @@ static void register_classes(void) {
 LEAN_EXPORT lean_obj_res lean_brotli_compress_new(uint8_t quality, lean_obj_arg _w) {
     pthread_once(&g_classes_once, register_classes);
 
+    if (!brotli_quality_is_valid(quality)) {
+        return mk_io_error("brotli compress: quality must be in range 0..11");
+    }
+
     brotli_compress_state *s = (brotli_compress_state *)malloc(sizeof(*s));
     if (!s) return mk_io_error("brotli compress: out of memory");
 
@@ -354,6 +366,10 @@ static lean_obj_res decoder_drive(brotli_decompress_state *s,
         }
 
         if (result == BROTLI_DECODER_RESULT_SUCCESS) {
+            if (avail_in > 0) {
+                free(buf);
+                return mk_io_error("brotli decompress: trailing data after end of stream");
+            }
             s->finished = 1;
             break;
         }
@@ -375,7 +391,8 @@ LEAN_EXPORT lean_obj_res lean_brotli_decompress_push(b_lean_obj_arg state_obj,
     brotli_decompress_state *s = lean_get_external_data(state_obj);
 
     if (s->finished) {
-        /* Stream already finished; any extra data is silently ignored */
+        if (lean_sarray_size(chunk) > 0)
+            return mk_io_error("brotli decompress: push after end of stream");
         lean_obj_res empty = lean_alloc_sarray(1, 0, 0);
         return lean_io_result_mk_ok(empty);
     }
