@@ -1,5 +1,7 @@
 # lean-brotli 🥦
 
+![mission](https://img.shields.io/badge/mission-to_brotli_or_not_to_brotli) ![license](https://img.shields.io/badge/license-MIT-lightgrey.svg) ![PR Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen) ![last commit](https://img.shields.io/github/last-commit/JGalego/lean-brotli)
+
 Lean 4 bindings for [Brotli](https://github.com/google/brotli) compression (RFC 7932).
 
 Provides whole-buffer and streaming APIs for Brotli compression and decompression, plus file-level helpers.
@@ -84,6 +86,10 @@ lake exe bench compress 1048576 prng 11
 - Quality 0 is fastest; quality 11 is maximum compression (slow).  The default is 11.
 - Brotli does **not** embed the decompressed size in the stream; the whole-buffer decompressor therefore uses a streaming decoder internally with a growable buffer.
 - The three shared library components (`libbrotlienc`, `libbrotlidec`, `libbrotlicommon`) are linked statically on Linux to avoid glibc symbol mismatches with Lean's bundled toolchain sysroot.
+
+## License
+
+This project is licensed under the MIT License. See [LICENSE](LICENSE) for details.
 
 ## References
 
