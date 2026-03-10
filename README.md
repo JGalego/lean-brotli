@@ -6,11 +6,11 @@ Lean 4 bindings for [Brotli](https://github.com/google/brotli) compression (RFC 
 
 Provides whole-buffer and streaming APIs for Brotli compression and decompression, plus file-level helpers.
 
-> "**To Brotli, or not to Brotli**, that is the compression. <br>
-> Whether ’tis nobler in the RAM to suffer <br>
-> The slings and arrows of outrageous file sizes, <br>
-> Or to take arms against a sea of plaintext <br>
-> And by deflating end them."
+<i>"**To Brotli, or not to Brotli**, that is the compression. <br>
+Whether ’tis nobler in the RAM to suffer<br>
+The slings and arrows of outrageous file sizes,<br>
+Or to take arms against a sea of plaintext<br>
+And by deflating end them."</i>
 
 <img src="shakespeare.gif" width="40%"/>
 
@@ -86,6 +86,24 @@ lake exe bench compress 1048576 prng 11
 - Quality 0 is fastest; quality 11 is maximum compression (slow).  The default is 11.
 - Brotli does **not** embed the decompressed size in the stream; the whole-buffer decompressor therefore uses a streaming decoder internally with a growable buffer.
 - The three shared library components (`libbrotlienc`, `libbrotlidec`, `libbrotlicommon`) are linked statically on Linux to avoid glibc symbol mismatches with Lean's bundled toolchain sysroot.
+
+## Formal Specification (`Brotli/Spec/`)
+
+The library includes a formal specification layer that axiomatises the key properties any correct Brotli implementation must satisfy per RFC 7932, then proves derived theorems from those axioms alone.
+
+Because the compression and decompression functions are **opaque FFI bindings** (implemented in C via `@[extern]`), we cannot inspect the implementation directly. Instead we state a small set of axioms - validated externally by the test suite, fuzzing, and the C source - and let Lean's kernel machine-check everything built on top of them.
+
+| Module | Contents |
+|---|---|
+| `Brotli.Spec.Basic` | Core **roundtrip axiom** (if `compress` succeeds, `decompress` recovers the original data), `ValidQuality` predicate, quality invariance, empty-input roundtrip, universal quantification over all 12 quality levels |
+| `Brotli.Spec.Streaming` | **Streaming ↔ batch equivalence** axioms (`compress_singleChunk`, `decompress_singleChunk`), streaming roundtrip, streaming quality invariance |
+| `Brotli.Spec.SizeBound` | **Compressed-size upper bound** (`maxCompressedSize`, matching the reference encoder's `BrotliEncoderMaxCompressedSize` formula), `compress_ok` (compression always succeeds for valid quality), output-size bound |
+
+### Trust boundary
+
+- **Axioms** (3 in Basic, 2 in Streaming, 2 in SizeBound): require external validation.
+- **Derived theorems**: fully machine-checked by Lean's kernel, zero `sorry`'s given
+- The roundtrip axiom uses a *conditional* formulation - it does not assume `compress` can never throw, only that if it succeeds, `decompress` returns the original data.
 
 ## License
 
