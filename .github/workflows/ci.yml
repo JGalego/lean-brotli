@@ -12,6 +12,8 @@ jobs:
     steps:
       - name: Checkout 📦
         uses: actions/checkout@v6
+      - name: Install 🥦
+        run: sudo apt-get update && sudo apt-get install -y libbrotli-dev
       - name: Build 🏗️
         uses: leanprover/lean-action@v1.4.0
         with:
