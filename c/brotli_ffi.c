@@ -140,6 +140,12 @@ LEAN_EXPORT lean_obj_res lean_brotli_decompress(b_lean_obj_arg data,
         }
     }
 
+    if (!BrotliDecoderIsFinished(dec)) {
+        free(buf);
+        BrotliDecoderDestroyInstance(dec);
+        return mk_io_error("brotli decompress: incomplete stream");
+    }
+
     BrotliDecoderDestroyInstance(dec);
     lean_obj_res arr = mk_byte_array(buf, total);
     free(buf);
@@ -383,7 +389,11 @@ LEAN_EXPORT lean_obj_res lean_brotli_decompress_push(b_lean_obj_arg state_obj,
 LEAN_EXPORT lean_obj_res lean_brotli_decompress_finish(b_lean_obj_arg state_obj,
                                                         lean_obj_arg _w) {
     brotli_decompress_state *s = lean_get_external_data(state_obj);
-    (void)s; /* Nothing to flush for the decoder — any remaining state is discarded */
+    if (!s->finished && !BrotliDecoderIsFinished(s->decoder)) {
+        s->finished = 1;
+        return mk_io_error("brotli decompress: incomplete stream");
+    }
+    s->finished = 1;
     lean_obj_res empty = lean_alloc_sarray(1, 0, 0);
     return lean_io_result_mk_ok(empty);
 }
