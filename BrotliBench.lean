@@ -21,20 +21,20 @@ Examples:
 -/
 
 def mkConstantData (size : Nat) : ByteArray := Id.run do
-  let mut r := ByteArray.empty
+  let mut r := ⟨Array.mkEmpty size⟩
   for _ in [:size] do r := r.push 0x42
   return r
 
 def mkCyclicData (size : Nat) : ByteArray := Id.run do
   let pat : Array UInt8 := #[0x00,0x11,0x22,0x33,0x44,0x55,0x66,0x77,
                                0x88,0x99,0xAA,0xBB,0xCC,0xDD,0xEE,0xFF]
-  let mut r := ByteArray.empty
+  let mut r := ⟨Array.mkEmpty size⟩
   for i in [:size] do r := r.push pat[i % 16]!
   return r
 
 def mkPrngData (size : Nat) : ByteArray := Id.run do
   let mut state : UInt32 := 2463534242
-  let mut r := ByteArray.empty
+  let mut r := ⟨Array.mkEmpty size⟩
   for _ in [:size] do
     state := state ^^^ (state <<< 13)
     state := state ^^^ (state >>> 17)

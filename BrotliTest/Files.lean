@@ -18,13 +18,14 @@ def BrotliTest.Files.tests : IO Unit := do
   let decPath : System.FilePath := "/tmp/lean-brotli-test-input.dec"
   let _ ← Brotli.decompressFile outBr (outPath := some decPath)
   let recovered ← IO.FS.readBinFile decPath
-  unless recovered.beq data do throw (IO.userError "compressFile/decompressFile roundtrip failed")
+  unless recovered == data do throw (IO.userError "compressFile/decompressFile roundtrip failed")
 
   -- decompressFile with default path stripping (.br suffix)
   let _ ← Brotli.decompressFile outBr   -- writes to /tmp/lean-brotli-test-input
   let recovered2 ← IO.FS.readBinFile inPath
-  unless recovered2.beq data do throw (IO.userError "decompressFile suffix-strip roundtrip failed")
+  unless recovered2 == data do throw (IO.userError "decompressFile suffix-strip roundtrip failed")
 
-  let _ ← IO.Process.run { cmd := "rm", args := #["-f", inPath.toString, brPath.toString, decPath.toString] }
+  for p in [inPath, brPath, decPath] do
+    try IO.FS.removeFile p catch _ => pure ()
 
   IO.println "File tests: OK"

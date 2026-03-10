@@ -1,4 +1,17 @@
+# Lake build artifacts
 .lake
+build/
+*.olean
+
+# Editor / IDE
+.vscode/
+
+# OS
+.DS_Store
+Thumbs.db
 
 # Project Gutenberg
 pg100.txt
+
+# Temporary test/demo artifacts
+*.unbr

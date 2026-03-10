@@ -2,8 +2,7 @@
 
 Lean 4 bindings for [Brotli](https://github.com/google/brotli) compression (RFC 7932).
 
-Provides whole-buffer and streaming APIs for Brotli compression and decompression,
-plus file-level helpers.
+Provides whole-buffer and streaming APIs for Brotli compression and decompression, plus file-level helpers.
 
 > "**To Brotli, or not to Brotli**, that is the compression. <br>
 > Whether ’tis nobler in the RAM to suffer <br>
@@ -16,11 +15,10 @@ plus file-level helpers.
 ## Requirements
 
 - [Lean 4](https://lean-lang.org/) (tested with `v4.29.0-rc4`)
-- [Brotli](https://github.com/google/brotli) development headers (`libbrotli-dev` or equivalent)
+- [Brotli](https://github.com/google/brotli) development header (`libbrotli-dev` or equivalent)
 - `pkg-config` (for header discovery on NixOS and similar)
 
-On NixOS (or any system where Brotli is not in the default library path),
-the project includes a `shell.nix` that provides all C dependencies:
+On NixOS (or any system where Brotli is not in the default library path), the project includes a `shell.nix` that provides all C dependencies:
 
 ```bash
 nix-shell    # then run lake build, lake exe test, etc. inside the shell
@@ -94,11 +92,11 @@ lake exe bench compress 1048576 prng 11
 * (Leo de Moura) [When AI Writes the World's Software, Who Verifies It?](https://leodemoura.github.io/blog/2026/02/28/when-ai-writes-the-worlds-software.html)
 * (AWS Open Source Blog) [Lean Into Verified Software Development](https://aws.amazon.com/blogs/opensource/lean-into-verified-software-development/)
 
-## Standards
+### Standards
 
 * (RFC 7932) [Brotli Compressed Data Format](https://datatracker.ietf.org/doc/html/rfc7932)
 
-### Other Projects
+### Code
 
 * [`kim-em/lean-zip`](https://github.com/kim-em/lean-zip): Lean 4 bindings for zlib and Zstandard compression
 * [`google/brotli`](https://github.com/google/brotli): Brotli compression format

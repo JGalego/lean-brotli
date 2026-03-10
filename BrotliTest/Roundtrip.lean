@@ -8,13 +8,13 @@ def BrotliTest.Roundtrip.tests : IO Unit := do
   -- Default quality roundtrip
   let comp ← Brotli.compress data
   let decomp ← Brotli.decompress comp
-  unless decomp.beq data do throw (IO.userError "brotli default-quality roundtrip failed")
+  unless decomp == data do throw (IO.userError "brotli default-quality roundtrip failed")
 
   -- All quality levels
   for q in List.range 12 do  -- 0..11
     let c ← Brotli.compress data q.toUInt8
     let d ← Brotli.decompress c
-    unless d.beq data do throw (IO.userError s!"brotli quality {q} roundtrip failed")
+    unless d == data do throw (IO.userError s!"brotli quality {q} roundtrip failed")
 
   -- Empty input
   let emptyComp ← Brotli.compress ByteArray.empty
@@ -25,7 +25,7 @@ def BrotliTest.Roundtrip.tests : IO Unit := do
   let oneByte : ByteArray := ByteArray.mk #[0x42]
   let oneComp ← Brotli.compress oneByte
   let oneDecomp ← Brotli.decompress oneComp
-  unless oneDecomp.beq oneByte do throw (IO.userError "brotli single-byte roundtrip failed")
+  unless oneDecomp == oneByte do throw (IO.userError "brotli single-byte roundtrip failed")
 
   -- Decompression size limit should be rejected
   assertThrows "brotli decompress size limit"
@@ -44,6 +44,6 @@ def BrotliTest.Roundtrip.tests : IO Unit := do
   let large ← mkLargeData
   let largeComp ← Brotli.compress large
   let largeDec ← Brotli.decompress largeComp
-  unless largeDec.beq large do throw (IO.userError "brotli large-data roundtrip failed")
+  unless largeDec == large do throw (IO.userError "brotli large-data roundtrip failed")
 
   IO.println "Roundtrip tests: OK"

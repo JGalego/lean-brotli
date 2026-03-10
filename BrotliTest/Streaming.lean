@@ -28,7 +28,7 @@ def BrotliTest.Streaming.tests : IO Unit := do
     off := off + chunkSize
   let decFinal ← dec.finish
   decBuf := decBuf ++ decFinal
-  unless decBuf.beq data do throw (IO.userError "streaming compress→decompress roundtrip failed")
+  unless decBuf == data do throw (IO.userError "streaming compress→decompress roundtrip failed")
 
   -- compressStream / decompressStream helpers
   let inStream  ← byteArrayReadStream data
@@ -40,7 +40,7 @@ def BrotliTest.Streaming.tests : IO Unit := do
   let (outStream2, getOut2) ← collectStream
   Brotli.decompressStream inStream2 outStream2
   let streamDecompressed ← getOut2
-  unless streamDecompressed.beq data do throw (IO.userError "compressStream/decompressStream roundtrip failed")
+  unless streamDecompressed == data do throw (IO.userError "compressStream/decompressStream roundtrip failed")
 
   -- compressStream at quality 0 (fastest)
   let inStream3 ← byteArrayReadStream data
@@ -51,7 +51,7 @@ def BrotliTest.Streaming.tests : IO Unit := do
   let (outStream4, getOut4) ← collectStream
   Brotli.decompressStream inStream4 outStream4
   let fastDecompressed ← getOut4
-  unless fastDecompressed.beq data do throw (IO.userError "compressStream quality 0 roundtrip failed")
+  unless fastDecompressed == data do throw (IO.userError "compressStream quality 0 roundtrip failed")
 
   -- Large data streaming
   let large ← mkLargeData
@@ -64,6 +64,6 @@ def BrotliTest.Streaming.tests : IO Unit := do
   let (outLarge2, getLarge2) ← collectStream
   Brotli.decompressStream inLarge2 outLarge2
   let largeDec ← getLarge2
-  unless largeDec.beq large do throw (IO.userError "large streaming roundtrip failed")
+  unless largeDec == large do throw (IO.userError "large streaming roundtrip failed")
 
   IO.println "Streaming tests: OK"

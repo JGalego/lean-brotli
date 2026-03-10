@@ -61,4 +61,5 @@ def main : IO Unit := do
   IO.println s!"  + Streaming: {if shakespeare == recovered then "✅" else "⚠️"}"
 
   -- Clean up
-  let _ ← IO.Process.run { cmd := "rm", args := #["-f", tmpIn.toString, tmpBr.toString] }
+  for p in [tmpIn, tmpBr] do
+    try IO.FS.removeFile p catch _ => pure ()

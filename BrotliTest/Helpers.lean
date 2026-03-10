@@ -1,10 +1,6 @@
 import Brotli
 
-/-! Test utilities: byte-array comparison, assertion helpers, and test data generation. -/
-
-/-- Check that two byte arrays are equal. -/
-def ByteArray.beq (a b : ByteArray) : Bool :=
-  a.data == b.data
+/-! Test utilities: assertion helpers, and test data generation. -/
 
 /-- Assert that an IO action throws an error containing the given substring. -/
 def assertThrows (description : String) (action : IO α) (errorSubstring : String) : IO Unit := do
@@ -51,7 +47,7 @@ def collectStream : IO (IO.FS.Stream × IO (ByteArray)) := do
 
 /-- Build the standard medium-sized test payload (~50 KB of mixed data). -/
 def mkTestData : IO ByteArray := do
-  let mut result := ByteArray.empty
+  let mut result := ⟨Array.mkEmpty 50000⟩
   -- Repeated pattern portion (compresses well)
   for i in [:10000] do
     result := result.push (i % 256).toUInt8
