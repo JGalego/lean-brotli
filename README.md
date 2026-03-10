@@ -1,6 +1,6 @@
 # lean-brotli 🥦
 
-![mission](https://img.shields.io/badge/mission-to_brotli_or_not_to_brotli) ![license](https://img.shields.io/badge/license-MIT-lightgrey.svg) ![PR Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen) ![last commit](https://img.shields.io/github/last-commit/JGalego/lean-brotli)
+![mission](https://img.shields.io/badge/mission-to_brotli_or_not_to_brotli-purple) ![license](https://img.shields.io/badge/license-MIT-lightgrey.svg) ![PR Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen) ![last commit](https://img.shields.io/github/last-commit/JGalego/lean-brotli)
 
 Lean 4 bindings for [Brotli](https://github.com/google/brotli) compression (RFC 7932).
 
