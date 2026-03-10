@@ -69,6 +69,9 @@ def linkFlags : IO (Array String) := do
 package «lean-brotli» where
   moreLinkArgs := run_io linkFlags
   testDriver   := "test"
+  lintDriver   := "batteries/runLinter"
+
+require "leanprover-community" / "batteries" @ git "main"
 
 lean_lib Brotli
 

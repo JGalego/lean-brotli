@@ -2,6 +2,7 @@ import BrotliTest.Helpers
 
 /-! Tests for whole-buffer Brotli compress / decompress. -/
 
+/-- Tests for whole-buffer Brotli compress / decompress roundtrips. -/
 def BrotliTest.Roundtrip.tests : IO Unit := do
   let data ← mkTestData
 

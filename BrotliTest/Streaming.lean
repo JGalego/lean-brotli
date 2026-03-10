@@ -2,6 +2,7 @@ import BrotliTest.Helpers
 
 /-! Tests for streaming Brotli compression / decompression. -/
 
+/-- Tests for streaming Brotli compression / decompression. -/
 def BrotliTest.Streaming.tests : IO Unit := do
   let data ← mkTestData
   let chunkSize := 1000

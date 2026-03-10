@@ -2,6 +2,7 @@ import BrotliTest.Helpers
 
 /-! Tests for file-based Brotli compress / decompress helpers. -/
 
+/-- Tests for file-based Brotli compress / decompress helpers. -/
 def BrotliTest.Files.tests : IO Unit := do
   let data ← mkTestData
 
