@@ -75,6 +75,10 @@ require "leanprover-community" / "batteries" @ git "main"
 
 lean_lib Brotli
 
+-- Formal specification (axioms + derived theorems) -------------------------
+lean_lib BrotliSpec where
+  globs := #[.submodules `Brotli.Spec]
+
 -- Brotli FFI ------------------------------------------------------------------
 input_file brotli_ffi.c where
   path := "c" / "brotli_ffi.c"
